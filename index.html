@@ -1,1 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTech R&D Platform | Gestão Laboratorial</title>
+    <style>
+        :root {
+            --primary: #1B365D;
+            --secondary: #2E5B88;
+            --bg: #F4F6F8;
+            --text: #1F2937;
+            --border: #CBD5E1;
+            --danger: #B91C1C;
+            --success: #15803D;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background-color: var(--bg); color: var(--text); }
+        header { background-color: var(--primary); color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 1.3rem; }
+        .container { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
+        h2 { margin-top: 0; color: var(--primary); font-size: 1.15rem; border-bottom: 2px solid var(--bg); padding-bottom: 0.5rem; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.3rem; font-size: 0.9rem; color: #111827; }
+        input, select { width: 100%; padding: 0.6rem; border: 1px solid #64748B; border-radius: 4px; font-size: 0.95rem; color: #111827; }
+        input::placeholder { color: #475569; }
+        button { background-color: var(--primary); color: #fff; border: none; padding: 0.7rem 1.2rem; border-radius: 4px; cursor: pointer; font-weight: 600; margin-top: 1rem; }
+        button:hover { background-color: var(--secondary); }
+        .btn-danger { background-color: var(--danger); padding: 0.4rem 0.8rem; margin-top: 0; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+        th { background-color: #E2E8F0; color: var(--primary); }
+        .badge { padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; background: #DCFCE7; color: var(--success); }
+        .alert { padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; display: none; font-weight: 500; }
+        .alert-success { background: #DCFCE7; color: var(--success); border: 1px solid #86EFAC; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NutriTech R&D Platform — Controle de Amostras</h1>
+        <span>Diego Ferreira (RGM: 35018852)</span>
+    </header>
 
+    <div class="container">
+        <div id="feedback" class="alert alert-success"></div>
+
+        <div class="card">
+            <h2>Cadastrar Nova Amostra Laboratorial</h2>
+            <form id="sampleForm">
+                <div class="form-grid">
+                    <div>
+                        <label for="lote">Código do Lote *</label>
+                        <input type="text" id="lote" placeholder="Ex: LOTE-2026-01" required>
+                    </div>
+                    <div>
+                        <label for="ingrediente">Ingrediente / Protótipo *</label>
+                        <input type="text" id="ingrediente" placeholder="Ex: Proteína Isolada" required>
+                    </div>
+                    <div>
+                        <label for="ph">pH Analítico (aceita vírgula ou ponto) *</label>
+                        <input type="text" id="ph" placeholder="Ex: 6,8" required>
+                    </div>
+                    <div>
+                        <label for="status">Status do Protocolo</label>
+                        <select id="status">
+                            <option value="Aprovado">Aprovado</option>
+                            <option value="Em Análise">Em Análise</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Salvar Registro no Sistema</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Amostras Registradas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lote</th>
+                        <th>Ingrediente</th>
+                        <th>pH Sanitizado</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let amostras = JSON.parse(localStorage.getItem('nutritech_samples')) || [
+            { id: 1, lote: 'LOTE-2026-01', ingrediente: 'Amido Modificado P&D', ph: '6.4', status: 'Aprovado' },
+            { id: 2, lote: 'LOTE-2026-02', ingrediente: 'Fibra Solúvel Beta', ph: '5.9', status: 'Em Análise' }
+        ];
+
+        function showFeedback(msg) {
+            const el = document.getElementById('feedback');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3500);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            amostras.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.lote}</strong></td>
+                        <td>${item.ingrediente}</td>
+                        <td>${item.ph}</td>
+                        <td><span class="badge">${item.status}</span></td>
+                        <td><button class="btn-danger" onclick="deleteSample(${item.id})">Excluir</button></td>
+                    </tr>
+                `;
+            });
+            localStorage.setItem('nutritech_samples', JSON.stringify(amostras));
+        }
+
+        document.getElementById('sampleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const rawPh = document.getElementById('ph').value.replace(',', '.');
+            const parsedPh = parseFloat(rawPh);
+            if (isNaN(parsedPh)) {
+                alert('Erro: Informe um valor numérico válido para o pH.');
+                return;
+            }
+            const novaAmostra = {
+                id: Date.now(),
+                lote: document.getElementById('lote').value,
+                ingrediente: document.getElementById('ingrediente').value,
+                ph: parsedPh.toFixed(2),
+                status: document.getElementById('status').value
+            };
+            amostras.push(novaAmostra);
+            renderTable();
+            this.reset();
+            showFeedback('Amostra registrada com sucesso (pH sanitizado automaticamente).');
+        });
+
+        function deleteSample(id) {
+            if (confirm('Tem certeza que deseja excluir este protocolo laboratorial?')) {
+                amostras = amostras.filter(a => a.id !== id);
+                renderTable();
+                showFeedback('Registro excluído com segurança.');
+            }
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
